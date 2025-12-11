@@ -106,6 +106,91 @@ export default function Home() {
                 ))}
               </div>
             </div>
+
+            {/* ---------------- MOBILE RESPONSIVE ---------------- */}
+            <style>
+              {`
+@media screen and (max-width: 850px) {
+
+  /* Hero content container */
+  .container:first-of-type {
+    position: relative !important;
+    top: -70px;           /* adjust vertical */
+    left: 168px;          /* adjust horizontal */
+    width: auto;
+    text-align: center;
+  }
+
+  /* Robot Image (Mobile) */
+  .mobile-only {
+    display: block !important;
+    position: relative !important;
+    top: 50px;            /* move vertically */
+    left: 100px;           /* move horizontally */
+    
+  }
+
+  .mobile-only img {
+    width: 50px !important;  /* chhoti size */
+    height: auto !important;
+    margin: 0 auto !important; /* center */
+    display: block !important;
+    opacity: 0.95 !important;
+  }
+
+ /* Main heading */
+.container:first-of-type h1 {
+  position: relative !important;
+  top: 0px;
+  left: 0px;
+  text-align: center !important;
+  margin: 0 auto !important;
+  text-shadow: 8px 8px 20px #000000; 
+}
+
+/* Subheading */
+.container:first-of-type p {
+  position: relative !important;
+  top: 5px;
+  left: 0px;
+  text-align: center !important;
+  margin: 10px auto !important;
+  color: yellow !important;      
+  text-shadow: 8px 8px 15px #000000 !important;  
+  font-weight: bold !important;  
+}
+
+/* Button */
+  .container:first-of-type .buttons {
+    position: relative !important;
+    display: block !important;
+    text-align: center !important;
+    margin: 15px auto !important;
+    top: 0px;  
+    left: 0px;  
+  }
+
+  /* Chapter text */
+  .chapter-text {
+    position: relative !important;
+    top: 10px;
+    left: 0px;
+    text-align: center !important;
+    margin: 10px auto !important;
+  }
+
+  /* Hide desktop robot image */
+  .desktop-only {
+    display: none !important;
+  }
+}
+
+@media screen and (min-width: 851px) {
+  .desktop-only { display: block !important; }
+  .mobile-only { display: none !important; }
+}
+`}
+            </style>
           </div>
         </header>
       </div>
