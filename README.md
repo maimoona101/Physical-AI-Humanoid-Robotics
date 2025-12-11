@@ -1,2 +1,2 @@
-Physical-Ai-Humanoid-Roboticw-Book
+Physical-Ai-Humanoid-Robotics-Book:
 Physical AI Humanoid Robotics is a concise and well-structured textbook that introduces students to the core principles of artificial intelligence applied to humanoid robotic systems. This book explains how physical AI enables robots to perceive, move, interact, and make decisions in real-world environments. Topics include robot mechanics, sensors, actuators, motion control, machine learning integration, and the future of intelligent humanoid machines. Designed for beginners and engineering students, it provides clear explanations and foundational concepts essential for academic study in AI-driven robotics.
