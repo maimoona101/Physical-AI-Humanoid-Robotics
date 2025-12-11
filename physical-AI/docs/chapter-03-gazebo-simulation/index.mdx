@@ -1,0 +1,146 @@
+---
+title: Digital Twin Simulation with Gazebo
+slug: /gazebo-simulation   # ensures unique URL
+sidebar_label: Gazebo Simulation
+sidebar_position: 3
+---
+
+## Learning Outcomes
+
+Upon completing this chapter, you will be able to:
+
+*   Understand the fundamentals of the Gazebo simulation environment.
+*   Create and modify robot models using URDF/SDF formats.
+*   Integrate Gazebo simulations with ROS 2 for communication and control.
+*   Simulate various sensors and actuators within Gazebo.
+*   Build and customize Gazebo worlds for specific simulation scenarios.
+
+---
+
+## Gazebo Simulation Environment
+
+Gazebo is a powerful 3D robot simulator that is widely used in the robotics community. It allows you to accurately simulate complex robotic systems in realistic indoor and outdoor environments. Gazebo provides a robust physics engine, high-quality graphics, and interfaces for interacting with sensors and actuators.
+
+Key features of Gazebo include:
+
+*   **Physics Engine**: Accurate simulation of rigid body dynamics, gravity, friction, and collisions.
+*   **Sensors**: Simulation of common robot sensors like cameras, LiDAR, IMUs (Inertial Measurement Units), contact sensors, and more.
+*   **Actuators**: Ability to control robot joints and other mechanisms.
+*   **Models**: Supports various robot description formats, most notably URDF (Unified Robot Description Format) and SDF (Simulation Description Format).
+*   **Worlds**: Customizable environments with different terrains, objects, and lighting.
+*   **ROS 2 Integration**: Seamless interaction with ROS 2 for commanding robots and receiving sensor data.
+
+## Robot Description Formats (URDF/SDF)
+
+To simulate a robot in Gazebo, you need a detailed description of its physical properties, joint configurations, and sensor placements. URDF and SDF are two primary formats used for this purpose.
+
+### URDF (Unified Robot Description Format)
+
+*   **Purpose**: Primarily designed for describing the kinematic and dynamic properties of a robot, particularly for use with ROS. It focuses on a single robot.
+*   **Structure**: Uses XML to define links (rigid bodies) and joints (connections between links). It can also specify visual and collision properties.
+*   **Limitations**: Cannot describe environments or multiple robots easily. Gazebo converts URDF to SDF internally for simulation.
+
+### SDF (Simulation Description Format)
+
+*   **Purpose**: A more comprehensive XML format capable of describing environments, articulated robots, static objects, sensors, and plugins. It is Gazebo's native description format.
+*   **Structure**: Defines `world`, `model`, `light`, and `include` elements. `model` elements can contain `link`, `joint`, `sensor`, and `plugin` tags.
+*   **Advantages**: More expressive for complex simulations, including multiple robots and detailed environmental interactions.
+
+For our capstone project, we will primarily work with URDF for defining our humanoid robot and, when necessary, convert or use SDF for more advanced Gazebo features or environment descriptions.
+
+## Integrating ROS 2 with Gazebo
+
+```mermaid
+graph TD
+    subgraph "ROS 2 System"
+        Ros2Control[ROS 2 Control Node] --> CmdVelTopic[/cmd_vel]
+        SensorDataTopic[/camera/image_raw] --> Ros2Perception[ROS 2 Perception Node]
+        CmdVelTopic --> GazeboRosPlugin[Gazebo ROS 2 Control Plugin]
+        GazeboRosPlugin --> GazeboPhysics[Gazebo Physics Engine]
+    end
+
+    subgraph "Gazebo Simulation"
+        GazeboRobot[Simulated Robot Model] --> GazeboSensors[Simulated Sensors]
+        GazeboSensors --> GazeboSensorPlugin[Gazebo ROS 2 Sensor Plugin]
+        GazeboSensorPlugin --> SensorDataTopic
+        GazeboPhysics --> GazeboRobot
+    end
+
+    GazeboControlTopic[/gazebo/model/cmd_vel] --- GazeboRosPlugin
+
+    style Ros2Control fill:#f9f,stroke:#333,stroke-width:2px
+    style CmdVelTopic fill:#eee,stroke:#999,stroke-dasharray: 5 5
+    style SensorDataTopic fill:#eee,stroke:#999,stroke-dasharray: 5 5
+    style Ros2Perception fill:#bbf,stroke:#333,stroke-width:2px
+    style GazeboRosPlugin fill:#fcb,stroke:#333,stroke-width:2px
+    style GazeboPhysics fill:#cff,stroke:#333,stroke-width:2px
+    style GazeboRobot fill:#ccf,stroke:#333,stroke-width:2px
+    style GazeboSensors fill:#ffb,stroke:#333,stroke-width:2px
+    style GazeboSensorPlugin fill:#bfb,stroke:#333,stroke-width:2px
+    style GazeboControlTopic fill:#eee,stroke:#999,stroke-dasharray: 5 5
+```
+
+
+Gazebo provides ROS 2 packages and plugins that enable seamless communication between your ROS 2 nodes and the simulated environment. This allows you to send commands to your robot in Gazebo and receive sensor data back to your ROS 2 applications.
+
+### Key Components:
+
+*   **`ros_gz_sim`**: A meta-package that provides bridges between ROS 2 and Gazebo (often referred to as `Ignition` or `Gazebo Sim`). This includes tools for launching Gazebo, spawning models, and bridging ROS 2 topics to Gazebo topics.
+*   **Gazebo ROS 2 Plugins**: These are shared libraries loaded by Gazebo that expose specific functionalities (e.g., controlling a joint, publishing camera images) as ROS 2 interfaces.
+    *   `libgazebo_ros_diff_drive.so`: For differential drive robots.
+    *   `libgazebo_ros_joint_state_publisher.so`: Publishes joint states.
+    *   `libgazebo_ros_camera.so`: Publishes camera images.
+    *   `libgazebo_ros_imu_sensor.so`: Publishes IMU data.
+
+### Workflow for Integration:
+
+1.  **Define your robot**: Create a URDF or SDF file describing your humanoid robot, including its joints, links, and sensor definitions.
+2.  **Add Gazebo ROS 2 plugins**: Include the necessary Gazebo ROS 2 plugins within your robot's URDF/SDF to expose ROS 2 interfaces for control and sensing.
+3.  **Launch Gazebo with your robot**: Use a ROS 2 launch file to start Gazebo and spawn your robot model into the simulation.
+4.  **Interact via ROS 2**: Write ROS 2 nodes to publish commands (e.g., `geometry_msgs/msg/Twist` for base movement, `std_msgs/msg/Float64` for joint positions) and subscribe to sensor topics (e.g., `sensor_msgs/msg/Image`, `sensor_msgs/msg/JointState`).
+
+## Simulating Sensors and Actuators
+
+Gazebo excels at simulating realistic sensor data and actuator behavior.
+
+### Sensors
+
+*   **Camera**: Generates realistic image data, including RGB, depth, and infrared. ROS 2 plugins can publish these as `sensor_msgs/msg/Image` and `sensor_msgs/msg/CameraInfo`.
+*   **LiDAR (Laser Scan)**: Simulates 2D or 3D laser scanners, publishing `sensor_msgs/msg/LaserScan` or `sensor_msgs/msg/PointCloud2`.
+*   **IMU**: Provides linear acceleration and angular velocity, publishing `sensor_msgs/msg/Imu`.
+*   **Contact Sensors**: Detects collisions and contact forces, useful for tactile feedback or safety systems.
+
+### Actuators
+
+Actuators (e.g., motors, servos) are controlled through Gazebo's joint interfaces, which can be exposed as ROS 2 topics or services. For a humanoid, you'll typically control each joint individually, often using position, velocity, or effort commands.
+
+## Building Custom Gazebo Worlds
+
+Customizing your simulation environment is crucial for testing specific scenarios. Gazebo allows you to create your own worlds using SDF files.
+
+### Elements of a World File:
+
+*   **`<world>` tag**: The root element, containing lights, models, and a physics engine configuration.
+*   **`<light>`**: Defines directional, point, or spot lights.
+*   **`<model>`**: Includes static or dynamic objects (e.g., tables, walls, other robots) from Gazebo's model database or custom models.
+*   **`<include>`**: Reuses existing models or worlds.
+*   **`<gui>`**: Configures the Gazebo GUI, camera position, etc.
+
+By creating custom worlds, you can design complex testing grounds for your humanoid robot, simulating different obstacles, terrains, and interaction objects.
+
+## Further Reading and Exercises
+
+*   **Explore**: Browse the official Gazebo documentation and tutorials for more advanced features like plugins, sensors, and model editing.
+*   **Experiment**: Try downloading and simulating an existing URDF robot model (e.g., `fetch_description`, `turtlebot3_description`) in Gazebo with ROS 2.
+*   **Design**: Sketch a simple outdoor environment for your capstone humanoid. What objects and terrain features would you include, and why?
+
+---
+
+### Key Takeaways for the Capstone Project
+
+Gazebo will be the primary simulation environment for our capstone humanoid, providing a realistic physical interaction space. From this chapter, we take the following for our project:
+
+*   We will define our humanoid robot using **URDF/SDF**, integrating **Gazebo ROS 2 plugins** for joint control and sensor data.
+*   The simulated environment will provide **realistic sensor feedback** (camera, IMU) essential for the perception modules (Chapter 6).
+*   We will use Gazebo to **test our robot's locomotion and manipulation capabilities** in a physics-driven environment before moving to real hardware.
+*   **Custom Gazebo worlds** will allow us to create diverse scenarios for task execution and evaluation of our humanoid AI system.

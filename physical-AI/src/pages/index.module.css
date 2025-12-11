@@ -1,0 +1,71 @@
+html {
+  scroll-behavior: smooth;
+}
+
+.heroBanner {
+  background: linear-gradient(135deg, #0F2027, #203A43, #2C5364);
+  color: #fff;
+  padding: 4rem 0;
+  text-align: center;
+}
+
+.heroBanner .hero__subtitle {
+  margin-top: 1rem;
+  font-size: 1.2rem;
+}
+
+.buttons {
+  margin-top: 2rem;
+}
+
+.chapterList {
+  padding: 3rem 0;
+  text-align: center;
+  background-color: #f9f9f9;
+}
+
+.chaptersGrid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1.5rem;
+  margin-top: 2rem;
+}
+
+.chapterBox {
+  background-color: #fff;
+  border: 2px solid #000;
+  border-radius: 10px;
+  padding: 2rem;
+  width: 200px;
+  font-size: 1.1rem;
+  font-weight: bold;
+  transition: transform 0.2s, background-color 0.2s;
+}
+
+.chapterBox:hover {
+  transform: translateY(-5px);
+  background-color: #e0e0e0;
+  cursor: pointer;
+}
+
+.hoverOnly:hover {
+  color: #000;
+}
+
+.startButton {
+  background-color: #adeb30; /* Teal / Green */
+  color: #fff;
+  font-weight: bold;
+  padding: 0.8rem 2rem;
+  font-size: 1.2rem;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  transition: transform 0.3s, background-color 0.3s;
+}
+
+.startButton:hover {
+  background-color: #59f839; /* Darker on hover */
+  transform: translateY(-2px);
+}

@@ -1,0 +1,285 @@
+---
+id: "lab-gazebo-model"
+title: "Lab: Gazebo Model and Basic Control"
+sidebar_label: "Lab: Gazebo Model"
+sidebar_position: 1
+---
+
+## Introduction
+
+This lab will guide you through creating a simple robot model in URDF, spawning it in Gazebo, simulating its sensors, and controlling its joints using ROS 2. This is a foundational step for integrating more complex humanoid robots into our digital twin environment.
+
+## Prerequisites
+
+*   A functional ROS 2 Humble installation and workspace.
+*   Gazebo installed and working with ROS 2 (e.g., via `ros-humble-ros-gz` packages).
+*   Basic understanding of URDF (Unified Robot Description Format) and XML structure.
+*   Familiarity with creating and building ROS 2 Python packages (from Chapter 2 Lab).
+
+## Part 1: Creating a Simple URDF Robot Model
+
+We will define a basic two-wheeled differential drive robot. This simplicity allows us to focus on the core concepts of URDF and Gazebo integration.
+
+1.  **Navigate to your capstone package source directory**:
+    ```bash
+    cd ~/ros2_ws/src/humanoid_ai_capstone
+    ```
+2.  **Create a `urdf` directory** within your package:
+    ```bash
+    mkdir -p urdf
+    ```
+3.  **Create `simple_robot.urdf`** in `~/ros2_ws/src/humanoid_ai_capstone/urdf/`:
+    ```xml
+    <!-- ~/ros2_ws/src/humanoid_ai_capstone/urdf/simple_robot.urdf -->
+    <?xml version="1.0"?>
+    <robot name="simple_robot">
+
+      <material name="blue">
+        <color rgba="0 0 0.8 1"/>
+      </material>
+      <material name="white">
+        <color rgba="1 1 1 1"/>
+      </material>
+
+      <!-- Base Link -->
+      <link name="base_link">
+        <visual>
+          <geometry>
+            <box size="0.4 0.2 0.1"/>
+          </geometry>
+          <material name="blue"/>
+        </visual>
+        <collision>
+          <geometry>
+            <box size="0.4 0.2 0.1"/>
+          </geometry>
+        </collision>
+        <inertial>
+          <mass value="5.0"/>
+          <inertia ixx="0.01" ixy="0.0" ixz="0.0" iyy="0.01" iyz="0.0" izz="0.01"/>
+        </inertial>
+      </link>
+
+      <!-- Left Wheel Link -->
+      <link name="left_wheel_link">
+        <visual>
+          <origin xyz="0 0 0" rpy="1.57075 0 0"/>
+          <geometry>
+            <cylinder radius="0.05" length="0.04"/>
+          </geometry>
+          <material name="white"/>
+        </visual>
+        <collision>
+          <origin xyz="0 0 0" rpy="1.57075 0 0"/>
+          <geometry>
+            <cylinder radius="0.05" length="0.04"/>
+          </geometry>
+        </collision>
+        <inertial>
+          <mass value="0.5"/>
+          <inertia ixx="0.001" ixy="0.0" ixz="0.0" iyy="0.001" iyz="0.0" izz="0.001"/>
+        </inertial>
+      </link>
+
+      <!-- Right Wheel Link -->
+      <link name="right_wheel_link">
+        <visual>
+          <origin xyz="0 0 0" rpy="1.57075 0 0"/>
+          <geometry>
+            <cylinder radius="0.05" length="0.04"/>
+          </geometry>
+          <material name="white"/>
+        </visual>
+        <collision>
+          <origin xyz="0 0 0" rpy="1.57075 0 0"/>
+          <geometry>
+            <cylinder radius="0.05" length="0.04"/>
+          </geometry>
+        </collision>
+        <inertial>
+          <mass value="0.5"/>
+          <inertia ixx="0.001" ixy="0.0" ixz="0.0" iyy="0.001" iyz="0.0" izz="0.001"/>
+        </inertial>
+      </link>
+
+      <!-- Left Wheel Joint -->
+      <joint name="left_wheel_joint" type="continuous">
+        <parent link="base_link"/>
+        <child link="left_wheel_link"/>
+        <origin xyz="0.15 0.12 0" rpy="0 0 0"/>
+        <axis xyz="0 1 0"/>
+      </joint>
+
+      <!-- Right Wheel Joint -->
+      <joint name="right_wheel_joint" type="continuous">
+        <parent link="base_link"/>
+        <child link="right_wheel_link"/>
+        <origin xyz="0.15 -0.12 0" rpy="0 0 0"/>
+        <axis xyz="0 1 0"/>
+      </joint>
+
+      <!-- Gazebo ROS 2 Control Plugin -->
+      <gazebo>
+        <plugin filename="libgazebo_ros_diff_drive.so" name="gazebo_ros_diff_drive">
+          <ros> <!-- ROS 2 plugin -->
+            <namespace>simple_robot</namespace>
+            <publish_rate>100</publish_rate>
+            <command_topic>cmd_vel</command_topic>
+            <odometry_topic>odom</odometry_topic>
+            <odometry_frame>odom</odometry_frame>
+            <robot_base_frame>base_link</robot_base_frame>
+            <wheel_separation>0.24</wheel_separation>
+            <wheel_radius>0.05</wheel_radius>
+            <left_joint>left_wheel_joint</left_joint>
+            <right_joint>right_wheel_joint</right_joint>
+            <publish_wheel_tf>true</publish_wheel_tf>
+            <publish_wheel_joint_state>true</publish_wheel_joint_state>
+          </ros>
+        </plugin>
+      </gazebo>
+
+    </robot>
+    ```
+4.  **Update `package.xml`**: Add `ros_gz_sim` and `xacro` as dependencies.
+    Edit `~/ros2_ws/src/humanoid_ai_capstone/package.xml` and add the following lines under the `<depend>` section:
+    ```xml
+        <depend>ros_gz_sim</depend>
+        <depend>xacro</depend>
+    ```
+
+## Part 2: Launching the Robot in Gazebo
+
+We need a ROS 2 launch file to start Gazebo and spawn our robot model.
+
+1.  **Create a `launch` directory** within your package:
+    ```bash
+    mkdir -p ~/ros2_ws/src/humanoid_ai_capstone/launch
+    ```
+2.  **Create `robot_spawn.launch.py`** in `~/ros2_ws/src/humanoid_ai_capstone/launch/`:
+    ```python
+    # ~/ros2_ws/src/humanoid_ai_capstone/launch/robot_spawn.launch.py
+
+    import os
+
+    from ament_index_python.packages import get_package_share_directory
+
+    from launch import LaunchDescription
+    from launch.actions import IncludeLaunchDescription, DeclareLaunchArgument
+    from launch.launch_description_sources import PythonLaunchDescriptionSource
+    from launch.substitutions import LaunchConfiguration, Command
+
+    from launch_ros.actions import Node
+    import xacro
+
+
+    def generate_launch_description():
+        # Get the launch directory
+        capstone_pkg_share = get_package_share_directory('humanoid_ai_capstone')
+        urdf_dir = os.path.join(capstone_pkg_share, 'urdf')
+        world_file = os.path.join(capstone_pkg_share, 'worlds', 'empty_world.sdf') # Placeholder for later
+
+        # Load the URDF file
+        robot_description_path = os.path.join(urdf_dir, 'simple_robot.urdf')
+        robot_description_content = Command(['xacro ', robot_description_path])
+
+        # Gazebo launch
+        gazebo_launch_dir = get_package_share_directory('ros_gz_sim')
+        gazebo_cmd = IncludeLaunchDescription(
+            PythonLaunchDescriptionSource(os.path.join(gazebo_launch_dir, 'launch', 'gazebo.launch.py')),
+            launch_arguments={'gazebo_args': '-s libgazebo_ros_factory.so'}.items()
+        )
+
+        # Robot state publisher node
+        robot_state_publisher_node = Node(
+            package='robot_state_publisher',
+            executable='robot_state_publisher',
+            name='robot_state_publisher',
+            output='screen',
+            parameters=[{'robot_description': robot_description_content}],
+        )
+
+        # Spawn robot in Gazebo
+        spawn_robot_node = Node(
+            package='ros_gz_sim',
+            executable='create',
+            arguments=['-name', 'simple_robot',
+                       '-topic', '/robot_description',
+                       '-x', '0',
+                       '-y', '0',
+                       '-z', '0.5'],
+            output='screen',
+        )
+
+        return LaunchDescription([
+            DeclareLaunchArgument(
+                'use_sim_time',
+                default_value='true',
+                description='Use simulation (Gazebo) clock'),
+            gazebo_cmd,
+            robot_state_publisher_node,
+            spawn_robot_node,
+        ])
+    ```
+
+3.  **Update `setup.py`**: Inform `colcon` to install the launch files and URDF.
+    Edit `~/ros2_ws/src/humanoid_ai_capstone/setup.py` and add the following to `data_files`:
+    ```python
+    # ...
+        data_files=[
+            ('share/' + package_name, ['package.xml']),
+            ('share/' + package_name + '/launch', glob(os.path.join('launch', '*.launch.py'))),
+            ('share/' + package_name + '/urdf', glob(os.path.join('urdf', '*.urdf'))),
+            ('share/' + package_name + '/resource', ['%s.egg-info' % package_name]),
+        ],
+    # ... (rest of setup.py)
+    ```
+    You will also need to import `glob` and `os`:
+    ```python
+    import os
+    from glob import glob
+    from setuptools import setup
+    # ...
+    ```
+
+## Part 3: Basic Motor Control via ROS 2
+
+Our `simple_robot.urdf` includes a `libgazebo_ros_diff_drive.so` plugin that subscribes to `/<robot_namespace>/cmd_vel` (in our case, `/simple_robot/cmd_vel`) to control the robot. We can use the `teleop_twist_keyboard` node (from Lab: ROS 2 Basics) to publish messages to this topic.
+
+1.  **Build your package again** to ensure all new files are installed:
+    ```bash
+    cd ~/ros2_ws
+    colcon build --packages-select humanoid_ai_capstone
+    source install/setup.bash
+    ```
+2.  **Launch Gazebo and your robot**:
+    ```bash
+    ros2 launch humanoid_ai_capstone robot_spawn.launch.py
+    ```
+    Gazebo should open, and you should see your simple box robot. If you encounter errors about `libgazebo_ros_factory.so`, ensure `ros-humble-ros-gz-sim` is installed.
+
+3.  **Run `teleop_twist_keyboard`** (in a new terminal, with your workspace sourced):
+    ```bash
+    ros2 run teleop_twist_keyboard teleop_twist_keyboard --ros-args -r cmd_vel:=/simple_robot/cmd_vel
+    ```
+    **Important**: We are remapping the `cmd_vel` topic to match the namespace of our `simple_robot` in Gazebo. Use your keyboard to move the robot.
+
+## Summary
+
+In this lab, you created a URDF model for a simple robot, integrated it into Gazebo, and controlled its movement using ROS 2 teleoperation. This establishes a fundamental digital twin for our robotic system, allowing us to develop and test control algorithms in a simulated environment.
+
+## Further Exploration
+
+*   **Add sensors to your URDF**: Integrate a simulated camera or LiDAR into your `simple_robot.urdf` and verify its data using `ros2 topic echo`.
+*   **Create a custom Gazebo world**: Design an SDF world with obstacles or different terrains to test your robot's navigation capabilities.
+*   **Implement a custom control node**: Instead of `teleop_twist_keyboard`, write a Python ROS 2 node to publish `Twist` messages for automated movement patterns.
+
+---
+
+### Capstone Project Relevance
+
+This lab is directly applicable to our Capstone Project:
+
+*   The methodology for creating **URDF/SDF models** will be used to define our humanoid robot.
+*   **ROS 2 Gazebo plugins** will be crucial for connecting our humanoid's joints and sensors to the ROS 2 ecosystem.
+*   The process of **launching Gazebo with our robot** will be extended to our humanoid, allowing us to simulate its behavior.
+*   The **basic motor control** demonstrated here will form the lowest level of our humanoid's action generation system, receiving commands from higher-level planning modules.

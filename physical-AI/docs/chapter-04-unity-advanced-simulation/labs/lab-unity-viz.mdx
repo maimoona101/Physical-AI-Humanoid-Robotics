@@ -1,0 +1,195 @@
+---
+id: "lab-gazebo-model"
+title: "Lab: Gazebo Model and Basic Control"
+sidebar_label: "Lab: Gazebo Model"
+sidebar_position: 1
+---
+
+## Introduction
+
+This lab will guide you through setting up a basic Unity project for robot visualization, importing a simple robot model (e.g., a URDF converted model), configuring its physics, and implementing basic interactions using C# scripting. We will also explore how to visualize sensor data within the Unity environment.
+
+## Prerequisites
+
+*   Unity Hub and Unity Editor (LTS version recommended) installed.
+*   Basic familiarity with the Unity Editor interface.
+*   Basic understanding of C# programming.
+*   (Optional but recommended) `Unity Robotics Hub` package installed in your Unity project.
+
+## Part 1: Setting up the Unity Project and Importing a Robot Model
+
+1.  **Create a New Unity Project**:
+    *   Open Unity Hub, click **New Project**.
+    *   Select a **3D (URP)** or **3D Core** template (URP is good for high-fidelity graphics).
+    *   Name your project (e.g., `HumanoidCapstoneUnity`) and choose a location.
+    *   Click **Create Project**.
+
+2.  **Install Unity Robotics Hub (Optional but recommended)**:
+    *   Once the project opens, go to **Window > Package Manager**.
+    *   In the Package Manager, select **Unity Registry** from the dropdown menu.
+    *   Search for `Robotics` and install the `Unity Robotics Hub` package. This package includes tools like `URDF Importer`.
+
+3.  **Import a Simple URDF Robot Model**:
+    *   For this lab, we will use a simplified model. You can either use the `URDF Importer` from `Unity Robotics Hub` to import a `.urdf` file (e.g., the `humanoid_base.urdf` from Chapter 3) or manually create a simple robot from Unity primitives.
+    *   **Using URDF Importer**: If you have `Unity Robotics Hub` installed, go to **Robotics > URDF Importer > Import URDF** and select your `humanoid_base.urdf` file. Configure import settings as needed.
+    *   **Manual Primitive Creation**: Alternatively, create a simple robot using Unity primitives:
+        *   In the **Hierarchy** window, right-click and select **3D Object > Cube** (for base). Rename it `Base_Link`.
+        *   Add another **3D Object > Sphere** (for head). Rename it `Head_Link`.
+        *   Drag `Head_Link` onto `Base_Link` in the Hierarchy to make it a child.
+        *   Position `Head_Link` above `Base_Link` (e.g., `Y=0.6` if Base is `0.5` high).
+        *   Add `Rigidbody` components to both `Base_Link` and `Head_Link` (select object, **Add Component > Rigidbody**).
+        *   Add a `HingeJoint` to `Base_Link` (**Add Component > Hinge Joint**). Connect `Head_Link` as the `Connected Body`. Configure the `Axis` (e.g., `Z=1` for yaw) and `Anchor` (e.g., `Y=0.25` for top of base).
+
+## Part 2: Custom Sensor Visualization (Camera) and Basic Environment Interaction
+
+1.  **Add a Camera Sensor to the Robot (if not imported with URDF)**:
+    *   Select `Head_Link` in the Hierarchy.
+    *   Right-click on `Head_Link` and select **Camera**.
+    *   Position the `Camera` GameObject within the head to simulate its field of view.
+    *   In the `Camera` component, adjust `Field of View` and `Clipping Planes` as desired.
+    *   **Real-time Feed**: For visualization, you can create a `Render Texture` (**Assets > Create > Render Texture**), assign it to the `Target Texture` of your robot's camera, and then display this `Render Texture` on a UI element (e.g., a `Raw Image` in a `Canvas`) in your scene.
+
+2.  **Implement Basic Environment Interaction (e.g., picking up an object)**:
+    *   Create a simple interactive object: In the Hierarchy, right-click and select **3D Object > Sphere**. Rename it `Interactable_Object`.
+    *   Add a `Rigidbody` component to `Interactable_Object`.
+    *   Create a C# script for interaction: **Assets > Create > C# Script**. Name it `RobotInteractor`.
+    *   Attach `RobotInteractor` to your `Base_Link` GameObject.
+    *   Edit `RobotInteractor.cs`:
+
+    ```csharp
+    using UnityEngine;
+
+    public class RobotInteractor : MonoBehaviour
+    {
+        public float interactionDistance = 1.0f;
+        public Transform holdPoint; // Assign an empty GameObject as a child of the robot for holding
+        private GameObject heldObject = null;
+
+        void Update()
+        {
+            // Example: Press 'E' to interact
+            if (Input.GetKeyDown(KeyCode.E))
+            {
+                if (heldObject == null)
+                {
+                    TryPickUp();
+                }
+                else
+                {
+                    DropObject();
+                }
+            }
+        }
+
+        void TryPickUp()
+        {
+            RaycastHit hit;
+            // Cast a ray forward from the robot to detect interactable objects
+            if (Physics.Raycast(transform.position, transform.forward, out hit, interactionDistance))
+            {
+                if (hit.collider.CompareTag("Interactable")) // Tag your Interactable_Object as "Interactable"
+                {
+                    heldObject = hit.collider.gameObject;
+                    heldObject.GetComponent<Rigidbody>().isKinematic = true; // Disable physics for held object
+                    heldObject.transform.SetParent(holdPoint); // Parent to hold point
+                    heldObject.transform.localPosition = Vector3.zero; // Position at hold point
+                    Debug.Log("Picked up: " + heldObject.name);
+                }
+            }
+        }
+
+        void DropObject()
+        {
+            if (heldObject != null)
+            {
+                heldObject.transform.SetParent(null); // Unparent
+                heldObject.GetComponent<Rigidbody>().isKinematic = false; // Re-enable physics
+                heldObject = null;
+                Debug.Log("Dropped object.");
+            }
+        }
+    }
+    ```
+    *   **Setup in Unity**: Tag `Interactable_Object` as `Interactable` (**Inspector > Tag > Add Tag...** then select `Interactable` from the dropdown for the object). Create an empty GameObject as a child of `Base_Link` and name it `HoldPoint`. Assign `HoldPoint` to the `Hold Point` field in your `RobotInteractor` script on `Base_Link`.
+
+## Part 3: Basic Motor Control (via C# Script)
+
+We will adapt the `JointController` script from the chapter to control a robot joint.
+
+1.  **Modify `JointController.cs`** (or create a new script):
+    *   Ensure your `HingeJoint` on `Base_Link` (connecting to `Head_Link`) is correctly configured.
+    *   Update the `JointController` script to allow external input for `motorSpeed`.
+
+    ```csharp
+    using UnityEngine;
+
+    public class RobotHeadController : MonoBehaviour
+    {
+        public HingeJoint headJoint;
+        private float currentTargetVelocity = 0f;
+        public float motorForce = 100f;
+        public float rotationSpeed = 10f; // Speed for manual control
+
+        void Start()
+        {
+            if (headJoint == null)
+            {
+                headJoint = GetComponent<HingeJoint>();
+            }
+            // Ensure motor is enabled from the start
+            JointMotor motor = headJoint.motor;
+            motor.force = motorForce;
+            headJoint.motor = motor;
+            headJoint.useMotor = true;
+        }
+
+        void Update()
+        {
+            // Manual control for head rotation (e.g., A/D keys)
+            if (Input.GetKey(KeyCode.A))
+            {
+                currentTargetVelocity = rotationSpeed; // Rotate left
+            }
+            else if (Input.GetKey(KeyCode.D))
+            {
+                currentTargetVelocity = -rotationSpeed; // Rotate right
+            }
+            else
+            {
+                currentTargetVelocity = 0f; // Stop rotation
+            }
+
+            // Apply the target velocity
+            JointMotor motor = headJoint.motor;
+            motor.targetVelocity = currentTargetVelocity;
+            headJoint.motor = motor;
+        }
+
+        // Public method to be called from other scripts or ROS 2 commands
+        public void SetTargetRotationVelocity(float velocity)
+        {
+            currentTargetVelocity = velocity;
+        }
+    }
+    ```
+    *   **Setup in Unity**: Attach this `RobotHeadController` script to your `Base_Link` GameObject (the one with the `HingeJoint` connecting to the `Head_Link`). Assign the `HingeJoint` to the `Head Joint` field in the Inspector. Run the simulation and use 'A' and 'D' keys to control the head rotation.
+
+## Summary
+
+In this lab, you initialized a Unity project for robot simulation, imported or created a simple robot model, set up basic sensor visualization, implemented environment interaction using C# scripting, and controlled a robot joint. These foundational skills are critical for leveraging Unity's advanced capabilities in your humanoid robotics projects.
+
+## Further Exploration
+
+*   **ROS 2 Integration**: Explore the `Unity Robotics Hub` documentation for full ROS 2 integration to send commands from a ROS 2 node to your Unity robot and receive sensor data back.
+*   **Advanced Physics**: Experiment with different joint types (`ConfigurableJoint`) and more complex physics interactions.
+*   **UI/UX**: Create a simple user interface in Unity to display sensor data or send high-level commands to your robot.
+
+---
+
+### Capstone Project Relevance
+
+This lab directly prepares for enhancing the capstone humanoid:
+
+*   **Visual Enhancements**: The process of importing and configuring models in Unity will be used to create a visually rich representation of our humanoid.
+*   **Interactive Environments**: Skills in creating interactive objects and scripts will enable us to design complex task environments for the humanoid.
+*   **Basic Control**: The C# scripting for joint control forms the basis for implementing more sophisticated locomotion and manipulation behaviors within Unity, which can then be commanded via ROS 2.
