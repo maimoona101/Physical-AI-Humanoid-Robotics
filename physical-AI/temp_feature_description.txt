@@ -1,0 +1,11 @@
+Embedding Pipeline Setup
+## Goal
+Extract text from deployed Docusurus URLs, generate embeddings using **Cohere**, and store  then in **Qdrant** for RAG-based retrieval.
+
+## Target
+Developers building backend retrieval layers.
+
+## Focus
+- URL crawling and text cleaning
+- cohere embedding generation
+- Qdrant vector storage

@@ -1,0 +1,161 @@
+.query-interface {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+  font-family: Arial, sans-serif;
+}
+
+.query-form {
+  margin-bottom: 20px;
+}
+
+.query-input-container {
+  margin-bottom: 15px;
+}
+
+.query-input {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 16px;
+  resize: vertical;
+  min-height: 100px;
+}
+
+.query-input:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+
+.query-input.invalid {
+  border-color: #dc3545;
+  box-shadow: 0 0 0 2px rgba(220, 53, 69, 0.25);
+}
+
+.validation-error {
+  color: #dc3545;
+  font-size: 0.875rem;
+  margin-top: 5px;
+}
+
+.query-options {
+  margin-bottom: 15px;
+  padding: 15px;
+  background-color: #f8f9fa;
+  border-radius: 4px;
+}
+
+.option-group {
+  margin-bottom: 10px;
+}
+
+.option-group label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: 500;
+  color: #495057;
+}
+
+.context-input {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 14px;
+  resize: vertical;
+}
+
+.option-input {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.query-submit-button {
+  background-color: #007bff;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.query-submit-button:hover:not(:disabled) {
+  background-color: #0056b3;
+}
+
+.query-submit-button:disabled {
+  background-color: #6c757d;
+  cursor: not-allowed;
+}
+
+.error-message {
+  background-color: #f8d7da;
+  color: #721c24;
+  padding: 12px;
+  border: 1px solid #f5c6cb;
+  border-radius: 4px;
+  margin-top: 15px;
+}
+
+.response-container {
+  background-color: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  padding: 20px;
+  margin-top: 20px;
+}
+
+.response-content {
+  line-height: 1.6;
+}
+
+.response-query,
+.response-answer,
+.sources-section,
+.context-section {
+  margin-bottom: 15px;
+}
+
+.response-query h4,
+.response-answer h4,
+.sources-section h4,
+.context-section h4 {
+  margin: 0 0 8px 0;
+  color: #495057;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.answer-content {
+  background-color: white;
+  padding: 12px;
+  border-radius: 4px;
+  border-left: 3px solid #007bff;
+  white-space: pre-wrap;
+}
+
+.sources-section ul,
+.context-section ul {
+  margin: 10px 0;
+  padding-left: 20px;
+}
+
+.sources-section li,
+.context-section li {
+  margin-bottom: 5px;
+  padding: 2px 0;
+}
+
+.response-metadata {
+  margin-top: 15px;
+  padding-top: 10px;
+  border-top: 1px solid #e9ecef;
+  color: #6c757d;
+  font-size: 0.9em;
+}

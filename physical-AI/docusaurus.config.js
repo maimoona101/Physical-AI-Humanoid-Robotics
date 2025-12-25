@@ -5,7 +5,7 @@ const config = {
   tagline: "Hands-on Learning for the Hackathon",
   favicon: "img/favicon.ico",
 
-  url: "https://example.com",
+  url: "https://physical-ai-humanoid-robotics-ochre.vercel.app",
   baseUrl: "/",
 
   organizationName: "your-org",
